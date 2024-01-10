@@ -1,3 +1,5 @@
+const CONTENT_TYPE: &str = "Content-Type";
+
 pub struct Client {
     api_key: String,
     #[cfg(feature = "reqwest")]
@@ -13,6 +15,69 @@ impl Client {
     }
 }
 
+#[cfg(feature = "reqwest")]
+impl Client {
+    pub async fn perform(&self, r: Request) -> anyhow::Result<String> {
+        match r.method {
+            Method::Post => {
+                let res = self
+                    .client
+                    .post(&r.url)
+                    .bearer_auth(&self.api_key)
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(r.body)
+                    .send()
+                    .await?;
+
+                let response_body = res.text().await?;
+                Ok(response_body)
+            }
+            Method::Get => {
+                let res = self
+                    .client
+                    .get(&r.url)
+                    .bearer_auth(&self.api_key)
+                    .header(CONTENT_TYPE, "application/json")
+                    .send()
+                    .await?;
+
+                let response_body = res.text().await?;
+                Ok(response_body)
+            }
+            Method::Delete => {
+                let res = self
+                    .client
+                    .delete(&r.url)
+                    .bearer_auth(&self.api_key)
+                    .header(CONTENT_TYPE, "application/json")
+                    .send()
+                    .await?;
+
+                let response_body = res.text().await?;
+                Ok(response_body)
+            }
+        }
+    }
+}
+
 pub struct Request {
-    method: String,
+    method: Method,
+    url: String,
+    body: String,
+}
+
+impl Request {
+    pub fn new(method: Method, url: &str, body: &str) -> Self {
+        Self {
+            method,
+            url: url.to_owned(),
+            body: body.to_owned(),
+        }
+    }
+}
+
+pub enum Method {
+    Post,
+    Get,
+    Delete,
 }
