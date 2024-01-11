@@ -1,13 +1,13 @@
 const CONTENT_TYPE: &str = "Content-Type";
 
-pub struct Client {
+pub(crate) struct Client {
     api_key: String,
     #[cfg(feature = "reqwest")]
     client: reqwest::Client,
 }
 
 impl Client {
-    pub fn new(api_key: &str) -> Self {
+    pub(crate) fn new(api_key: &str) -> Self {
         Self {
             api_key: api_key.to_owned(),
             client: reqwest::Client::new(),
@@ -17,7 +17,7 @@ impl Client {
 
 #[cfg(feature = "reqwest")]
 impl Client {
-    pub async fn perform(&self, r: Request) -> Result<reqwest::Response, reqwest::Error> {
+    pub(crate) async fn perform(&self, r: Request) -> Result<reqwest::Response, reqwest::Error> {
         match r.method {
             Method::Post => {
                 let mut request = self
@@ -52,14 +52,14 @@ impl Client {
     }
 }
 
-pub struct Request {
+pub(crate) struct Request {
     method: Method,
     url: String,
     body: Option<String>,
 }
 
 impl Request {
-    pub fn new(method: Method, url: &str, body: Option<String>) -> Self {
+    pub(crate) fn new(method: Method, url: &str, body: Option<String>) -> Self {
         Self {
             method,
             url: url.to_owned(),
@@ -68,7 +68,7 @@ impl Request {
     }
 }
 
-pub enum Method {
+pub(crate) enum Method {
     Post,
     Get,
     Delete,

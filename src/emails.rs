@@ -6,11 +6,6 @@ pub struct SendEmailResponse {
 }
 
 #[derive(serde_derive::Deserialize)]
-pub struct BatchSendEmailResponse {
-    pub data: Vec<SendEmailResponse>,
-}
-
-#[derive(serde_derive::Deserialize)]
 pub struct Email {
     pub id: String,
     // TODO: Type this - it's typed as 'object' in Resend's JSON
@@ -29,18 +24,18 @@ pub struct Email {
 
 #[derive(Debug, Clone, Default, serde_derive::Serialize)]
 pub struct Attachment {
-    pub content: Vec<u8>,
+    content: Vec<u8>,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "String::is_empty"))]
-    pub filename: String,
+    filename: String,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "String::is_empty"))]
-    pub path: String,
+    path: String,
 }
 
 #[derive(Debug, Clone, Default, serde_derive::Serialize)]
 pub struct Tag {
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "String::is_empty"))]
-    pub name: String,
-    pub value: String,
+    name: String,
+    value: String,
 }
 
 impl Tag {

@@ -36,8 +36,8 @@ pub struct VerifyResponse {
 }
 
 #[derive(serde_derive::Serialize)]
-pub struct DeleteRequest {
-    pub domain_id: String,
+struct DeleteRequest {
+    domain_id: String,
 }
 
 #[derive(serde_derive::Deserialize)]
