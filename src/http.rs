@@ -20,13 +20,17 @@ impl Client {
     pub async fn perform(&self, r: Request) -> Result<reqwest::Response, reqwest::Error> {
         match r.method {
             Method::Post => {
-                self.client
+                let mut request = self
+                    .client
                     .post(&r.url)
                     .bearer_auth(&self.api_key)
-                    .header(CONTENT_TYPE, "application/json")
-                    .body(r.body)
-                    .send()
-                    .await
+                    .header(CONTENT_TYPE, "application/json");
+
+                if let Some(body) = r.body {
+                    request = request.body(body);
+                }
+
+                request.send().await
             }
             Method::Get => {
                 self.client
@@ -51,15 +55,15 @@ impl Client {
 pub struct Request {
     method: Method,
     url: String,
-    body: String,
+    body: Option<String>,
 }
 
 impl Request {
-    pub fn new(method: Method, url: &str, body: &str) -> Self {
+    pub fn new(method: Method, url: &str, body: Option<String>) -> Self {
         Self {
             method,
             url: url.to_owned(),
-            body: body.to_owned(),
+            body,
         }
     }
 }

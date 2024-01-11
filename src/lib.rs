@@ -36,7 +36,7 @@ impl Client {
         let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
 
         let url = format!("{}/emails", DEFAULT_BASE_URL);
-        let request = http::Request::new(http::Method::Post, &url, &request_json);
+        let request = http::Request::new(http::Method::Post, &url, Some(request_json.to_string()));
 
         let response =
             parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
@@ -45,7 +45,7 @@ impl Client {
 
     pub async fn get_email(&self, email_id: &str) -> Result<emails::Email, Error> {
         let url = format!("{}/emails/{}", DEFAULT_BASE_URL, email_id);
-        let request = http::Request::new(http::Method::Get, &url, "");
+        let request = http::Request::new(http::Method::Get, &url, None);
 
         let response =
             parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
@@ -60,19 +60,45 @@ impl Client {
         let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
 
         let url = format!("{}/emails", DEFAULT_BASE_URL);
-        let request = http::Request::new(http::Method::Post, &url, &request_json);
+        let request = http::Request::new(http::Method::Post, &url, Some(request_json.to_string()));
 
         let response =
             parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
         serde_json::from_str(&response).map_err(Error::JSON)
     }
 
-    pub async fn delete_domain(
-        &self,
-        r: domains::DeleteRequest,
-    ) -> Result<domains::DeleteResponse, Error> {
-        let url = format!("{}/domains/{}", DEFAULT_BASE_URL, r.domain_id);
-        let request = http::Request::new(http::Method::Delete, &url, "");
+    pub async fn add_domain(&self, r: domains::AddRequest) -> Result<domains::Domain, Error> {
+        let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
+
+        let url = format!("{}/domains", DEFAULT_BASE_URL);
+        let request = http::Request::new(http::Method::Post, &url, Some(request_json.to_string()));
+
+        let response =
+            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
+        serde_json::from_str(&response).map_err(Error::JSON)
+    }
+
+    pub async fn verify_domain(&self, domain_id: &str) -> Result<domains::VerifyResponse, Error> {
+        let url = format!("{}/domains/{}", DEFAULT_BASE_URL, domain_id);
+        let request = http::Request::new(http::Method::Post, &url, None);
+
+        let response =
+            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
+        serde_json::from_str(&response).map_err(Error::JSON)
+    }
+
+    pub async fn list_domains(&self) -> Result<Vec<domains::Domain>, Error> {
+        let url = format!("{}/domains", DEFAULT_BASE_URL);
+        let request = http::Request::new(http::Method::Get, &url, None);
+
+        let response =
+            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
+        serde_json::from_str(&response).map_err(Error::JSON)
+    }
+
+    pub async fn delete_domain(&self, domain_id: &str) -> Result<domains::DeleteResponse, Error> {
+        let url = format!("{}/domains/{}", DEFAULT_BASE_URL, domain_id);
+        let request = http::Request::new(http::Method::Delete, &url, None);
 
         let response =
             parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
@@ -83,7 +109,6 @@ impl Client {
 #[derive(Debug)]
 pub enum Error {
     Resend(ResendErrorResponse),
-    // TODO: Implement this to wrap the underlying client error
     JSON(serde_json::Error),
     #[cfg(feature = "reqwest")]
     Client(reqwest::Error),
