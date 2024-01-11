@@ -1,5 +1,5 @@
 [package]
-name = "resend"
+name = "resend-rust"
 version = "0.1.1"
 edition = "2021"
 description = "A Resend client implemented in Rust"

@@ -1,5 +1,5 @@
 use dotenvy::dotenv;
-use resend::Client;
+use resend_rust::Client;
 
 #[tokio::test]
 async fn test_send_and_get_email() -> anyhow::Result<()> {
@@ -11,15 +11,15 @@ async fn test_send_and_get_email() -> anyhow::Result<()> {
 
     let c = Client::new(&api_key);
 
-    let r = resend::emails::SendEmailRequest::builder()
+    let r = resend_rust::emails::SendEmailRequest::builder()
         .to(&[test_email_to.clone()])
         .from(&test_email_from)
         .subject("Test Email!")
         .text("Test email!")
         .build();
 
-    let email = resend::emails::send(&c, r).await.unwrap();
-    let email = resend::emails::get(&c, &email.id).await.unwrap();
+    let email = resend_rust::emails::send(&c, r).await.unwrap();
+    let email = resend_rust::emails::get(&c, &email.id).await.unwrap();
 
     assert_eq!(email.from, test_email_from);
     for to in email.to {
