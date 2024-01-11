@@ -2,7 +2,6 @@ use dotenvy::dotenv;
 use resend::Client;
 
 #[tokio::test]
-#[ignore]
 async fn test_send_and_get_email() -> anyhow::Result<()> {
     dotenv().ok();
 

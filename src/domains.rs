@@ -13,9 +13,9 @@ pub struct Domain {
     pub name: String,
     pub created_at: String,
     pub status: String,
-    pub records: Vec<Record>,
-    pub region: String,
-    pub dns_provider: String,
+    pub records: Option<Vec<Record>>,
+    pub region: Option<String>,
+    pub dns_provider: Option<String>,
 }
 
 #[derive(serde_derive::Deserialize)]
@@ -24,9 +24,9 @@ pub struct Record {
     pub name: String,
     pub r#type: String,
     pub ttl: String,
-    pub status: String,
+    pub status: Option<String>,
     pub value: String,
-    pub priority: usize,
+    pub priority: Option<usize>,
 }
 
 #[derive(serde_derive::Deserialize)]
@@ -58,6 +58,14 @@ pub async fn add(client: &Client, r: AddRequest) -> Result<Domain, Error> {
     serde_json::from_str(&response).map_err(Error::JSON)
 }
 
+pub async fn get(client: &Client, domain_id: &str) -> Result<Domain, Error> {
+    let url = utils::url::domains::with_id(&client.base_url, domain_id);
+    let request = http::Request::new(http::Method::Get, &url, None);
+
+    let response = parse_response(client.perform(request).await.map_err(Error::Client)?).await?;
+    serde_json::from_str(&response).map_err(Error::JSON)
+}
+
 pub async fn verify(client: &Client, domain_id: &str) -> Result<VerifyResponse, Error> {
     let url = utils::url::domains::with_id(&client.base_url, domain_id);
     let request = http::Request::new(http::Method::Post, &url, None);
@@ -66,7 +74,12 @@ pub async fn verify(client: &Client, domain_id: &str) -> Result<VerifyResponse, 
     serde_json::from_str(&response).map_err(Error::JSON)
 }
 
-pub async fn list(client: &Client) -> Result<Vec<Domain>, Error> {
+#[derive(serde_derive::Deserialize)]
+pub struct ListDomainsResponse {
+    pub data: Vec<Domain>,
+}
+
+pub async fn list(client: &Client) -> Result<ListDomainsResponse, Error> {
     let url = utils::url::domains::base(&client.base_url);
     let request = http::Request::new(http::Method::Get, &url, None);
 

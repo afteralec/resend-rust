@@ -5,6 +5,7 @@ const SENDING_ACCESS: &str = "sending_access";
 
 #[derive(serde_derive::Serialize)]
 pub struct CreateRequest {
+    pub name: String,
     pub permission: Permission,
     pub domain_id: String,
 }
@@ -43,7 +44,7 @@ pub struct APIKey {
     pub created_at: String,
 }
 
-pub async fn create_api_key(client: &Client, r: CreateRequest) -> Result<CreateResponse, Error> {
+pub async fn create(client: &Client, r: CreateRequest) -> Result<CreateResponse, Error> {
     let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
 
     let url = utils::url::api_keys::base(&client.base_url);
@@ -53,7 +54,12 @@ pub async fn create_api_key(client: &Client, r: CreateRequest) -> Result<CreateR
     serde_json::from_str(&response).map_err(Error::JSON)
 }
 
-pub async fn list_api_keys(client: &Client) -> Result<Vec<APIKey>, Error> {
+#[derive(serde_derive::Deserialize)]
+pub struct ListResponse {
+    pub data: Vec<APIKey>,
+}
+
+pub async fn list(client: &Client) -> Result<ListResponse, Error> {
     let url = utils::url::api_keys::base(&client.base_url);
     let request = http::Request::new(http::Method::Get, &url, None);
 
@@ -61,12 +67,12 @@ pub async fn list_api_keys(client: &Client) -> Result<Vec<APIKey>, Error> {
     serde_json::from_str(&response).map_err(Error::JSON)
 }
 
-pub async fn delete_api_key(client: &Client, api_key_id: &str) -> Result<(), Error> {
+pub async fn delete(client: &Client, api_key_id: &str) -> Result<(), Error> {
     let url = utils::url::api_keys::with_id(&client.base_url, api_key_id);
     let request = http::Request::new(http::Method::Delete, &url, None);
 
-    let response = parse_response(client.perform(request).await.map_err(Error::Client)?).await?;
-    serde_json::from_str(&response).map_err(Error::JSON)
+    parse_response(client.perform(request).await.map_err(Error::Client)?).await?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -77,6 +83,7 @@ mod test {
     fn test_serialize_create_request() {
         let expected = "{\"permission\":\"full_access\",\"domain_id\":\"test-domain-id\"}";
         let json = serde_json::to_string(&CreateRequest {
+            name: "test-api-key".to_owned(),
             permission: Permission::FullAccess,
             domain_id: "test-domain-id".to_owned(),
         })
