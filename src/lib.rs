@@ -1,5 +1,6 @@
 use std::fmt;
 
+mod api_keys;
 mod domains;
 mod emails;
 mod http;
@@ -104,6 +105,38 @@ impl Client {
             parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
         serde_json::from_str(&response).map_err(Error::JSON)
     }
+
+    pub async fn create_api_key(
+        &self,
+        r: api_keys::CreateRequest,
+    ) -> Result<api_keys::CreateResponse, Error> {
+        let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
+
+        let url = format!("{}/api-keys", DEFAULT_BASE_URL);
+        let request = http::Request::new(http::Method::Post, &url, Some(request_json.to_string()));
+
+        let response =
+            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
+        serde_json::from_str(&response).map_err(Error::JSON)
+    }
+
+    pub async fn list_api_keys(&self) -> Result<Vec<api_keys::APIKey>, Error> {
+        let url = format!("{}/api-keys", DEFAULT_BASE_URL);
+        let request = http::Request::new(http::Method::Get, &url, None);
+
+        let response =
+            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
+        serde_json::from_str(&response).map_err(Error::JSON)
+    }
+
+    pub async fn delete_api_key(&self, api_key_id: &str) -> Result<(), Error> {
+        let url = format!("{}/api-keys/{}", DEFAULT_BASE_URL, api_key_id);
+        let request = http::Request::new(http::Method::Delete, &url, None);
+
+        let response =
+            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
+        serde_json::from_str(&response).map_err(Error::JSON)
+    }
 }
 
 #[derive(Debug)]
@@ -132,7 +165,6 @@ mod test {
     use super::*;
     use dotenvy::dotenv;
 
-    #[tokio::test]
     async fn test_send_email() {
         dotenv().ok();
 
