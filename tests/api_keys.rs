@@ -1,7 +1,6 @@
 use dotenvy::dotenv;
 use resend::Client;
 
-// TODO: This can't be tested on a free plan
 #[tokio::test]
 async fn test_add_list_and_delete_api_keys() -> anyhow::Result<()> {
     dotenv().ok();
