@@ -1,8 +1,9 @@
 use std::fmt;
 
-mod api_keys;
-mod domains;
-mod emails;
+pub mod api_keys;
+pub mod batch;
+pub mod domains;
+pub mod emails;
 mod http;
 
 pub use emails::{Attachment, Tag};
@@ -29,113 +30,11 @@ impl Client {
             client: http::Client::new(api_key),
         }
     }
+}
 
-    pub async fn send_email(
-        &self,
-        r: emails::SendEmailRequest,
-    ) -> Result<emails::SendEmailResponse, Error> {
-        let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
-
-        let url = format!("{}/emails", DEFAULT_BASE_URL);
-        let request = http::Request::new(http::Method::Post, &url, Some(request_json.to_string()));
-
-        let response =
-            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
-        serde_json::from_str(&response).map_err(Error::JSON)
-    }
-
-    pub async fn get_email(&self, email_id: &str) -> Result<emails::Email, Error> {
-        let url = format!("{}/emails/{}", DEFAULT_BASE_URL, email_id);
-        let request = http::Request::new(http::Method::Get, &url, None);
-
-        let response =
-            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
-        serde_json::from_str(&response).map_err(Error::JSON)
-    }
-
-    // TODO: Return an error if the input is longer than 100
-    pub async fn batch_send_email(
-        &self,
-        r: &[emails::SendEmailRequest],
-    ) -> Result<emails::BatchSendEmailResponse, Error> {
-        let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
-
-        let url = format!("{}/emails", DEFAULT_BASE_URL);
-        let request = http::Request::new(http::Method::Post, &url, Some(request_json.to_string()));
-
-        let response =
-            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
-        serde_json::from_str(&response).map_err(Error::JSON)
-    }
-
-    pub async fn add_domain(&self, r: domains::AddRequest) -> Result<domains::Domain, Error> {
-        let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
-
-        let url = format!("{}/domains", DEFAULT_BASE_URL);
-        let request = http::Request::new(http::Method::Post, &url, Some(request_json.to_string()));
-
-        let response =
-            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
-        serde_json::from_str(&response).map_err(Error::JSON)
-    }
-
-    pub async fn verify_domain(&self, domain_id: &str) -> Result<domains::VerifyResponse, Error> {
-        let url = format!("{}/domains/{}", DEFAULT_BASE_URL, domain_id);
-        let request = http::Request::new(http::Method::Post, &url, None);
-
-        let response =
-            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
-        serde_json::from_str(&response).map_err(Error::JSON)
-    }
-
-    pub async fn list_domains(&self) -> Result<Vec<domains::Domain>, Error> {
-        let url = format!("{}/domains", DEFAULT_BASE_URL);
-        let request = http::Request::new(http::Method::Get, &url, None);
-
-        let response =
-            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
-        serde_json::from_str(&response).map_err(Error::JSON)
-    }
-
-    pub async fn delete_domain(&self, domain_id: &str) -> Result<domains::DeleteResponse, Error> {
-        let url = format!("{}/domains/{}", DEFAULT_BASE_URL, domain_id);
-        let request = http::Request::new(http::Method::Delete, &url, None);
-
-        let response =
-            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
-        serde_json::from_str(&response).map_err(Error::JSON)
-    }
-
-    pub async fn create_api_key(
-        &self,
-        r: api_keys::CreateRequest,
-    ) -> Result<api_keys::CreateResponse, Error> {
-        let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
-
-        let url = format!("{}/api-keys", DEFAULT_BASE_URL);
-        let request = http::Request::new(http::Method::Post, &url, Some(request_json.to_string()));
-
-        let response =
-            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
-        serde_json::from_str(&response).map_err(Error::JSON)
-    }
-
-    pub async fn list_api_keys(&self) -> Result<Vec<api_keys::APIKey>, Error> {
-        let url = format!("{}/api-keys", DEFAULT_BASE_URL);
-        let request = http::Request::new(http::Method::Get, &url, None);
-
-        let response =
-            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
-        serde_json::from_str(&response).map_err(Error::JSON)
-    }
-
-    pub async fn delete_api_key(&self, api_key_id: &str) -> Result<(), Error> {
-        let url = format!("{}/api-keys/{}", DEFAULT_BASE_URL, api_key_id);
-        let request = http::Request::new(http::Method::Delete, &url, None);
-
-        let response =
-            parse_response(self.client.perform(request).await.map_err(Error::Client)?).await?;
-        serde_json::from_str(&response).map_err(Error::JSON)
+impl Client {
+    async fn perform(&self, r: http::Request) -> Result<reqwest::Response, reqwest::Error> {
+        self.client.perform(r).await
     }
 }
 
@@ -145,6 +44,7 @@ pub enum Error {
     JSON(serde_json::Error),
     #[cfg(feature = "reqwest")]
     Client(reqwest::Error),
+    Internal,
 }
 
 impl fmt::Display for Error {
@@ -180,6 +80,6 @@ mod test {
             .text("Test email!")
             .build();
 
-        c.send_email(r).await.unwrap();
+        emails::send(&c, r).await.unwrap();
     }
 }
