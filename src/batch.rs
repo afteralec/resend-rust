@@ -1,4 +1,4 @@
-use crate::{emails, http, parse_response, Client, Error, DEFAULT_BASE_URL};
+use crate::{emails, http, parse_response, utils, Client, Error};
 
 #[derive(serde_derive::Deserialize)]
 pub struct BatchSendResponse {
@@ -11,7 +11,7 @@ pub async fn send(
 ) -> Result<BatchSendResponse, Error> {
     let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
 
-    let url = format!("{}/emails", DEFAULT_BASE_URL);
+    let url = utils::url::emails::base(&client.base_url);
     let request = http::Request::new(http::Method::Post, &url, Some(request_json.to_string()));
 
     let response = parse_response(client.perform(request).await.map_err(Error::Client)?).await?;

@@ -1,4 +1,4 @@
-use crate::{http, parse_response, Client, Error, DEFAULT_BASE_URL};
+use crate::{http, parse_response, utils, Client, Error};
 
 const FULL_ACCESS: &str = "full_access";
 const SENDING_ACCESS: &str = "sending_access";
@@ -46,7 +46,7 @@ pub struct APIKey {
 pub async fn create_api_key(client: &Client, r: CreateRequest) -> Result<CreateResponse, Error> {
     let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
 
-    let url = format!("{}/api-keys", DEFAULT_BASE_URL);
+    let url = utils::url::api_keys::base(&client.base_url);
     let request = http::Request::new(http::Method::Post, &url, Some(request_json.to_string()));
 
     let response = parse_response(client.perform(request).await.map_err(Error::Client)?).await?;
@@ -54,7 +54,7 @@ pub async fn create_api_key(client: &Client, r: CreateRequest) -> Result<CreateR
 }
 
 pub async fn list_api_keys(client: &Client) -> Result<Vec<APIKey>, Error> {
-    let url = format!("{}/api-keys", DEFAULT_BASE_URL);
+    let url = utils::url::api_keys::base(&client.base_url);
     let request = http::Request::new(http::Method::Get, &url, None);
 
     let response = parse_response(client.perform(request).await.map_err(Error::Client)?).await?;
@@ -62,7 +62,7 @@ pub async fn list_api_keys(client: &Client) -> Result<Vec<APIKey>, Error> {
 }
 
 pub async fn delete_api_key(client: &Client, api_key_id: &str) -> Result<(), Error> {
-    let url = format!("{}/api-keys/{}", DEFAULT_BASE_URL, api_key_id);
+    let url = utils::url::api_keys::with_id(&client.base_url, api_key_id);
     let request = http::Request::new(http::Method::Delete, &url, None);
 
     let response = parse_response(client.perform(request).await.map_err(Error::Client)?).await?;

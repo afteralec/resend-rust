@@ -1,4 +1,4 @@
-use crate::{http, parse_response, Client, Error, DEFAULT_BASE_URL};
+use crate::{http, parse_response, utils, Client, Error};
 
 #[derive(serde_derive::Deserialize)]
 pub struct SendEmailResponse {
@@ -180,7 +180,7 @@ impl SendEmailRequestBuilder {
 pub async fn send(client: &Client, r: SendEmailRequest) -> Result<SendEmailResponse, Error> {
     let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
 
-    let url = format!("{}/emails", DEFAULT_BASE_URL);
+    let url = utils::url::emails::base(&client.base_url);
     let request = http::Request::new(http::Method::Post, &url, Some(request_json));
 
     let response = parse_response(client.perform(request).await.map_err(Error::Client)?).await?;
@@ -188,7 +188,7 @@ pub async fn send(client: &Client, r: SendEmailRequest) -> Result<SendEmailRespo
 }
 
 pub async fn get(client: &Client, email_id: &str) -> Result<Email, Error> {
-    let url = format!("{}/emails/{}", DEFAULT_BASE_URL, email_id);
+    let url = utils::url::emails::with_id(&client.base_url, email_id);
     let request = http::Request::new(http::Method::Get, &url, None);
 
     let response = parse_response(client.perform(request).await.map_err(Error::Client)?).await?;
