@@ -1,6 +1,8 @@
 mod emails;
 mod http;
 
+pub use emails::{Attachment, Tag};
+
 const DEFAULT_BASE_URL: &str = "https://api.resend.com";
 
 pub struct Client {
@@ -14,33 +16,18 @@ impl Client {
         }
     }
 
-    #[cfg(feature = "serde")]
     pub async fn send_email(
         &self,
         r: emails::SendEmailRequest,
     ) -> anyhow::Result<emails::SendEmailResponse> {
-        let response_json = self.send_email_internal(r).await?;
-        let deserialized: emails::SendEmailResponse = serde_json::from_str(&response_json).unwrap();
-        Ok(deserialized)
-    }
-
-    #[cfg(not(feature = "serde"))]
-    pub async fn send_email(&self, r: emails::SendEmailRequest) -> anyhow::Result<String> {
-        let response_json = self.send_email_interna(r).await?;
-        Ok(response_json)
-    }
-
-    async fn send_email_internal(&self, r: emails::SendEmailRequest) -> anyhow::Result<String> {
-        #[cfg(feature = "serde")]
         let request_json = serde_json::to_string(&r)?;
-        #[cfg(not(feature = "serde"))]
-        let request_json = r.to_string();
 
         let url = format!("{}/emails", DEFAULT_BASE_URL);
         let request = http::Request::new(http::Method::Post, &url, &request_json);
 
         let response_json = self.client.perform(request).await?;
-        Ok(response_json)
+        let response: emails::SendEmailResponse = serde_json::from_str(&response_json).unwrap();
+        Ok(response)
     }
 
     pub async fn get_email(&self, email_id: &str) -> anyhow::Result<emails::Email> {
@@ -48,16 +35,12 @@ impl Client {
         let request = http::Request::new(http::Method::Get, &url, "");
 
         let response_json = self.client.perform(request).await?;
-        let deserialized: emails::Email = serde_json::from_str(&response_json).unwrap();
-        Ok(deserialized)
+        let email: emails::Email = serde_json::from_str(&response_json).unwrap();
+        Ok(email)
     }
 }
 
-#[derive(Debug, Clone, Default)]
-#[cfg_attr(
-    feature = "serde",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[derive(Debug, Clone, Default, serde_derive::Serialize, serde_derive::Deserialize)]
 struct ResendErrorResponse {
     name: String,
     status_code: u16,

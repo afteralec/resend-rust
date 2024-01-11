@@ -6,9 +6,8 @@ description = "A Resend client implemented in Rust"
 license = "MIT"
 
 [features]
-default = ["reqwest", "serde"]
+default = ["reqwest"]
 reqwest = []
-serde = []
 
 [dependencies]
 anyhow = "1.0.79"

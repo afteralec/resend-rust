@@ -1,11 +1,11 @@
 use std::fmt;
 
-#[cfg_attr(feature = "serde", derive(serde_derive::Deserialize))]
+#[derive(serde_derive::Deserialize)]
 pub struct SendEmailResponse {
     pub id: String,
 }
 
-#[cfg_attr(feature = "serde", derive(serde_derive::Deserialize))]
+#[derive(serde_derive::Deserialize)]
 pub struct Email {
     pub id: String,
     // TODO: Type this - it's typed as 'object' in Resend's JSON
@@ -22,26 +22,32 @@ pub struct Email {
     pub last_event: String,
 }
 
-#[derive(Debug, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(serde_derive::Serialize))]
+#[derive(Debug, Clone, Default, serde_derive::Serialize)]
 pub struct Attachment {
-    content: Vec<u8>,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    filename: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    path: String,
+    pub content: Vec<u8>,
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "String::is_empty"))]
+    pub filename: String,
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "String::is_empty"))]
+    pub path: String,
 }
 
-#[derive(Debug, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(serde_derive::Serialize))]
+#[derive(Debug, Clone, Default, serde_derive::Serialize)]
 pub struct Tag {
-    #[serde(skip_serializing_if = "String::is_empty")]
-    name: String,
-    value: String,
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "String::is_empty"))]
+    pub name: String,
+    pub value: String,
 }
 
-#[derive(Debug, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(serde_derive::Serialize))]
+impl Tag {
+    pub fn new(name: &str, value: &str) -> Self {
+        Self {
+            name: name.to_owned(),
+            value: value.to_owned(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, serde_derive::Serialize)]
 pub struct SendEmailRequest {
     #[serde(skip_serializing_if = "String::is_empty")]
     from: String,
@@ -66,16 +72,6 @@ pub struct SendEmailRequest {
 impl SendEmailRequest {
     pub fn builder() -> SendEmailRequestBuilder {
         SendEmailRequestBuilder::default()
-    }
-}
-
-impl fmt::Display for SendEmailRequest {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{{\"from\": \"{}\", \"to\": \"{:?}\", \"subject\": \"{}\", \"bcc\": \"{:?}\", \"cc\": \"{:?}\", \"reply_to\": \"{:?}\", \"html\": \"{}\", \"text\": \"{}\", \"headers\": \"{:?}\", \"attachments\": \"{:?}\"}}",
-            &self.from, &self.to, &self.subject, &self.bcc, &self.cc, &self.reply_to, &self.text, &self.html, &self.headers, &self.attachments
-        )
     }
 }
 
@@ -173,31 +169,5 @@ impl SendEmailRequestBuilder {
     pub fn tags(mut self, tags: &[Tag]) -> Self {
         self.tags = Vec::from(tags);
         self
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    use dotenvy::dotenv;
-
-    #[test]
-    fn test_display() {
-        dotenv().ok();
-
-        let test_email_to = std::env::var("TEST_EMAIL_TO").unwrap();
-        let test_email_from = std::env::var("TEST_EMAIL_FROM").unwrap();
-
-        let r = SendEmailRequest::builder()
-            .to(&[test_email_to])
-            .from(&test_email_from)
-            .subject("Test Email!")
-            .text("Test email!")
-            .build();
-
-        let strung = format!("{}", r);
-
-        println!("{}", strung);
     }
 }
