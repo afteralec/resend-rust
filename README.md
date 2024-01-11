@@ -7,7 +7,7 @@ Yes, `resend-rs` already exists but doesn't implement the entire surface
 area of Resend's API as found in an example like the [Resend Go client](https://github.com/resendlabs/resend-go).
 This is an effort to develop a relatively fully-functioning Resend client for Rust.
 
-## Update as of v1.0.1
+## Update as of v0.1.1
 
 The overall API for everything except anything currently in beta is implemented.
 
