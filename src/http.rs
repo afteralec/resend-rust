@@ -17,44 +17,32 @@ impl Client {
 
 #[cfg(feature = "reqwest")]
 impl Client {
-    pub async fn perform(&self, r: Request) -> anyhow::Result<String> {
+    pub async fn perform(&self, r: Request) -> Result<reqwest::Response, reqwest::Error> {
         match r.method {
             Method::Post => {
-                let res = self
-                    .client
+                self.client
                     .post(&r.url)
                     .bearer_auth(&self.api_key)
                     .header(CONTENT_TYPE, "application/json")
                     .body(r.body)
                     .send()
-                    .await?;
-
-                let response_body = res.text().await?;
-                Ok(response_body)
+                    .await
             }
             Method::Get => {
-                let res = self
-                    .client
+                self.client
                     .get(&r.url)
                     .bearer_auth(&self.api_key)
                     .header(CONTENT_TYPE, "application/json")
                     .send()
-                    .await?;
-
-                let response_body = res.text().await?;
-                Ok(response_body)
+                    .await
             }
             Method::Delete => {
-                let res = self
-                    .client
+                self.client
                     .delete(&r.url)
                     .bearer_auth(&self.api_key)
                     .header(CONTENT_TYPE, "application/json")
                     .send()
-                    .await?;
-
-                let response_body = res.text().await?;
-                Ok(response_body)
+                    .await
             }
         }
     }

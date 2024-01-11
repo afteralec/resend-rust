@@ -1,8 +1,11 @@
-use std::fmt;
-
 #[derive(serde_derive::Deserialize)]
 pub struct SendEmailResponse {
     pub id: String,
+}
+
+#[derive(serde_derive::Deserialize)]
+pub struct BatchSendEmailResponse {
+    pub data: Vec<SendEmailResponse>,
 }
 
 #[derive(serde_derive::Deserialize)]
