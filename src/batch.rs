@@ -9,9 +9,9 @@ pub async fn send(
     client: &Client,
     r: &[emails::SendEmailRequest],
 ) -> Result<BatchSendResponse, Error> {
-    let request_json = serde_json::to_string(&r).map_err(Error::JSON)?;
+    let request_json = serde_json::to_string(r).map_err(Error::JSON)?;
 
-    let url = utils::url::emails::base(&client.base_url);
+    let url = utils::url::emails::batch(&client.base_url);
     let request = http::Request::new(http::Method::Post, &url, Some(request_json.to_string()));
 
     let response = parse_response(client.perform(request).await.map_err(Error::Client)?).await?;

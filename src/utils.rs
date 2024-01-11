@@ -2,9 +2,14 @@
 pub(crate) mod url {
     pub(crate) mod emails {
         const EMAILS: &str = "emails";
+        const BATCH: &str = "batch";
 
         pub(crate) fn base(base_url: &str) -> String {
             format!("{}/{}", base_url, EMAILS)
+        }
+
+        pub(crate) fn batch(base_url: &str) -> String {
+            format!("{}/{}/{}", base_url, EMAILS, BATCH)
         }
 
         pub(crate) fn with_id(base_url: &str, email_id: &str) -> String {

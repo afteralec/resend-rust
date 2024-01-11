@@ -49,6 +49,5 @@ pub enum Error {
 #[derive(Debug, Clone, Default, serde_derive::Serialize, serde_derive::Deserialize)]
 pub struct ResendErrorResponse {
     name: String,
-    status_code: u16,
     message: String,
 }
