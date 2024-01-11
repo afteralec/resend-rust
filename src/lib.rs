@@ -1,5 +1,3 @@
-use serde_derive::{Deserialize, Serialize};
-
 mod emails;
 mod http;
 
@@ -16,17 +14,33 @@ impl Client {
         }
     }
 
+    #[cfg(feature = "serde")]
     pub async fn send_email(
         &self,
         r: emails::SendEmailRequest,
     ) -> anyhow::Result<emails::SendEmailResponse> {
+        let response_json = self.send_email_internal(r).await?;
+        let deserialized: emails::SendEmailResponse = serde_json::from_str(&response_json).unwrap();
+        Ok(deserialized)
+    }
+
+    #[cfg(not(feature = "serde"))]
+    pub async fn send_email(&self, r: emails::SendEmailRequest) -> anyhow::Result<String> {
+        let response_json = self.send_email_interna(r).await?;
+        Ok(response_json)
+    }
+
+    async fn send_email_internal(&self, r: emails::SendEmailRequest) -> anyhow::Result<String> {
+        #[cfg(feature = "serde")]
         let request_json = serde_json::to_string(&r)?;
+        #[cfg(not(feature = "serde"))]
+        let request_json = r.to_string();
+
         let url = format!("{}/emails", DEFAULT_BASE_URL);
         let request = http::Request::new(http::Method::Post, &url, &request_json);
 
         let response_json = self.client.perform(request).await?;
-        let deserialized: emails::SendEmailResponse = serde_json::from_str(&response_json).unwrap();
-        Ok(deserialized)
+        Ok(response_json)
     }
 
     pub async fn get_email(&self, email_id: &str) -> anyhow::Result<emails::Email> {
@@ -39,8 +53,12 @@ impl Client {
     }
 }
 
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
-pub struct ResendErrorResponse {
+#[derive(Debug, Clone, Default)]
+#[cfg_attr(
+    feature = "serde",
+    derive(serde_derive::Serialize, serde_derive::Deserialize)
+)]
+struct ResendErrorResponse {
     name: String,
     status_code: u16,
     message: String,

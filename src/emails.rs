@@ -1,12 +1,11 @@
-use serde_derive::{Deserialize, Serialize};
 use std::fmt;
 
-#[derive(Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde_derive::Deserialize))]
 pub struct SendEmailResponse {
     pub id: String,
 }
 
-#[derive(Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde_derive::Deserialize))]
 pub struct Email {
     pub id: String,
     // TODO: Type this - it's typed as 'object' in Resend's JSON
@@ -23,7 +22,8 @@ pub struct Email {
     pub last_event: String,
 }
 
-#[derive(Debug, Clone, Default, Serialize)]
+#[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(serde_derive::Serialize))]
 pub struct Attachment {
     content: Vec<u8>,
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -32,14 +32,16 @@ pub struct Attachment {
     path: String,
 }
 
-#[derive(Debug, Clone, Default, Serialize)]
+#[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(serde_derive::Serialize))]
 pub struct Tag {
     #[serde(skip_serializing_if = "String::is_empty")]
     name: String,
     value: String,
 }
 
-#[derive(Debug, Clone, Default, Serialize)]
+#[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(serde_derive::Serialize))]
 pub struct SendEmailRequest {
     #[serde(skip_serializing_if = "String::is_empty")]
     from: String,
