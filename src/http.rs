@@ -1,5 +1,6 @@
 const CONTENT_TYPE: &str = "Content-Type";
 
+#[derive(Debug, Clone)]
 pub(crate) struct Client {
     api_key: String,
     #[cfg(feature = "reqwest")]

@@ -17,6 +17,7 @@ async fn parse_response(res: reqwest::Response) -> Result<String, Error> {
     res.text().await.map_err(Error::Client)
 }
 
+#[derive(Debug, Clone)]
 pub struct Client {
     base_url: String,
     client: http::Client,
