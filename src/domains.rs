@@ -35,11 +35,6 @@ pub struct VerifyResponse {
     pub id: String,
 }
 
-#[derive(serde_derive::Serialize)]
-struct DeleteRequest {
-    domain_id: String,
-}
-
 #[derive(serde_derive::Deserialize)]
 pub struct DeleteResponse {
     // TODO: Find a way to type this
